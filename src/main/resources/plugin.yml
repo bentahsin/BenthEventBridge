@@ -1,0 +1,6 @@
+name: BenthEventBridge
+version: 1.0.0
+main: com.bentahsin.bentheventbridge.BenthEventBridge
+api-version: 1.13
+authors: [ bentahsin ]
+description: MethodHandle tabanlı ultra hızlı Event sistemi ve Cross-Plugin Bus.
