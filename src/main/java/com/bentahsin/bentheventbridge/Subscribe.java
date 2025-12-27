@@ -26,4 +26,11 @@ public @interface Subscribe {
      * Ancak "true" yaparsanız iptal edilmiş eventleri görmezden gelirsiniz.
      */
     boolean ignoreCancelled() default false;
+
+    /**
+     * Sadece BenthMessageEvent için geçerlidir.
+     * Eğer belirtilirse, sadece bu kanal ismine sahip mesajlar tetiklenir.
+     * Boş bırakılırsa tüm kanalları dinler (manuel kontrol gerekir).
+     */
+    String channel() default "";
 }

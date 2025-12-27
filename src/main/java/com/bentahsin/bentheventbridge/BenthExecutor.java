@@ -15,16 +15,27 @@ public class BenthExecutor implements EventExecutor {
 
     private final MethodHandle handle;
     private final Class<? extends Event> eventClass;
+    private final String requiredChannel;
 
-    public BenthExecutor(MethodHandle handle, Class<? extends Event> eventClass) {
+    public BenthExecutor(MethodHandle handle, Class<? extends Event> eventClass, String requiredChannel) {
         this.handle = handle;
         this.eventClass = eventClass;
+        this.requiredChannel = requiredChannel;
     }
 
     @Override
     public void execute(Listener listener, Event event) throws EventException {
         if (!eventClass.isAssignableFrom(event.getClass())) {
             return;
+        }
+
+        if (!requiredChannel.isEmpty()) {
+            if (event instanceof BenthMessageEvent) {
+                BenthMessageEvent messageEvent = (BenthMessageEvent) event;
+                if (!messageEvent.getChannel().equals(requiredChannel)) {
+                    return;
+                }
+            }
         }
 
         try {

@@ -10,9 +10,6 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
-/**
- * Event dinleyicilerini tarayıp kayıt eden ana merkez.
- */
 public class BenthRegistry {
 
     private final Plugin plugin;
@@ -22,11 +19,6 @@ public class BenthRegistry {
         this.plugin = plugin;
     }
 
-    /**
-     * Bir Listener sınıfındaki @Subscribe metodlarını tarar ve kaydeder.
-     *
-     * @param listener Kaydedilecek sınıf instance'ı (örn: new PlayerListener())
-     */
     public void register(Listener listener) {
         Class<?> clazz = listener.getClass();
 
@@ -36,29 +28,34 @@ public class BenthRegistry {
             }
 
             if (Modifier.isStatic(method.getModifiers())) {
-                throw new IllegalStateException("BenthEventBridge HATASI: @Subscribe metodu STATIC olamaz! -> "
-                        + clazz.getName() + "#" + method.getName());
+                throw new IllegalStateException("BenthEventBridge HATASI: @Subscribe metodu STATIC olamaz! -> " + method.getName());
             }
 
             if (method.getParameterCount() != 1) {
-                throw new IllegalArgumentException("BenthEventBridge HATASI: Metot tam olarak 1 parametre almalı! -> "
-                        + clazz.getName() + "#" + method.getName());
+                throw new IllegalArgumentException("BenthEventBridge HATASI: Metot tam olarak 1 parametre almalı! -> " + method.getName());
             }
 
             Class<?> paramType = method.getParameterTypes()[0];
             if (!Event.class.isAssignableFrom(paramType)) {
-                throw new IllegalArgumentException("BenthEventBridge HATASI: Parametre org.bukkit.event.Event sınıfından türetilmeli! -> "
+                throw new IllegalArgumentException("BenthEventBridge HATASI: Parametre Event türevi olmalı! -> " + method.getName());
+            }
+
+            Subscribe annotation = method.getAnnotation(Subscribe.class);
+            String channelFilter = annotation.channel();
+
+            if (!channelFilter.isEmpty() && !BenthMessageEvent.class.isAssignableFrom(paramType)) {
+                throw new IllegalArgumentException("BenthEventBridge HATASI: 'channel' filtresi sadece BenthMessageEvent ile kullanılabilir! -> "
                         + clazz.getName() + "#" + method.getName());
             }
 
             Class<? extends Event> eventType = paramType.asSubclass(Event.class);
-            Subscribe annotation = method.getAnnotation(Subscribe.class);
 
             try {
                 MethodHandle handle = lookup.unreflect(method);
-
                 MethodHandle boundHandle = handle.bindTo(listener);
-                BenthExecutor executor = new BenthExecutor(boundHandle, eventType);
+
+                BenthExecutor executor = new BenthExecutor(boundHandle, eventType, channelFilter);
+
                 Bukkit.getPluginManager().registerEvent(
                         eventType,
                         listener,
